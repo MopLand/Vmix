@@ -1,0 +1,48 @@
+
+let project = require('./project');
+
+let page = {}
+let projectname = process.argv[3] // 获取执行哪个文件
+if (process.env.NODE_ENV == 'development') {
+  page = objectProject
+} else {
+  page[projectname] = project[projectname]
+}
+
+module.exports = {
+  pages: page,
+  chainWebpack: config => {
+    const options = module.exports
+    const pages = options.pages
+    const pageKeys = Object.keys(pages)
+
+    // Long-term caching
+
+    const IS_VENDOR = /[\\/]node_modules[\\/]/
+
+    config.optimization
+      .splitChunks({
+        cacheGroups: {
+          ...pageKeys.map(key => ({
+            name: `chunk-${key}-vendors`,
+            priority: -11,
+            chunks: chunk => chunk.name === key,
+            test: IS_VENDOR,
+            enforce: true,
+          })),
+          common: {
+            name: 'chunk-common',
+            priority: -20,
+            chunks: 'initial',
+            minChunks: 2,
+            reuseExistingChunk: true,
+            enforce: true,
+          },
+        },
+      })
+  },
+  configureWebpack: config => {
+	//console.log( process.env );
+	config.push( require('./src/' + projectname + '/babel.config' ) );
+  }
+}
